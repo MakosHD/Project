@@ -1,38 +1,34 @@
-#include <Arduino.h>
+#include <Arduino.h>//Бібліотека для коректної роботи Visual Studio Code з Arduino
+#include <FastLED.h>// Бібліотека для роботи з адресними світлодіодами
 
-#include <FastLED.h>
+//#define DEBUG // Режим дебагу
 
-#define DEBUG
-
-
+//Кнопки
 #define red_butt_pin 2
 #define blue_butt_pin 3
 #define green_butt_pin 4
 #define white_butt_pin 5
 
+//Піни світлодіоду
 #define red_led 9
 #define green_led 10
 #define blue_led 11
 
+//Зумер
 #define buzzer 8
 
+//Адресна світлодіодна стрічка
 #define LED_PIN 13
 #define LED_NUM 11
 CRGB leds[LED_NUM];
 
+//Тип колір. Зберігає значення кольору в RGB
 struct Color
 {
   byte R;
   byte G;
   byte B;
 
-  // ЗАПАМЯТАТИ ЗАПАМЯТАТИ ЗАПАМЯТАТИ ЗАПАМЯТАТИ ЗАПАМЯТАТИ ЗАПАМЯТАТИ ЗАПАМЯТАТИ ЗАПАМЯТАТИ для чого це(полюбому спитають)
-  //  Конструктор для ініціалізації кольору
-  /*Ваші визначення кольорів припинили працювати через відсутність конструктора за замовчуванням у структурі Color. Коли Ви додаєте користувацький конструктор (наприклад, для перетворення Buttons у Color), компілятор більше не генерує конструктор за замовчуванням. Щоб вирішити цю проблему, можна додати конструктор для ініціалізації кольорів вручну:*/
-  /*  Color(byte r = 0, byte g = 0, byte b = 0) : R(r), G(g), B(b) {}
-
-    Color(const Buttons& buttons) : R(buttons.R ? 255 : 0), G(buttons.G ? 255 : 0), B(buttons.B ? 255 : 0) {}
-  */
   bool operator==(Color color)
   {
     return R == color.R && G == color.G && B == color.B;
@@ -43,6 +39,7 @@ struct Color
   }
 };
 
+//Тип у якому зберігається всі стани кнопок
 struct Buttons
 {
   bool R;
@@ -60,6 +57,7 @@ struct Buttons
 };
 Buttons buttons;
 
+//Кольори
 Color white = {255, 255, 255};
 Color red = {255, 0, 0};
 Color green = {0, 255, 0};
@@ -85,6 +83,7 @@ Color colors_rgb[3] = {
 
 Color led_color = black;
 
+//Тимчасовий буфер кнопок
 bool red_butt = true;
 bool green_butt = true;
 bool blue_butt = true;
@@ -95,21 +94,24 @@ bool green_butt_old = true;
 bool blue_butt_old = true;
 bool white_butt_old = true;
 
+//Час останнього натискання білого кнопки
 unsigned long white_butt_last_time = 0;
 
+//Індекс режиму
 int index = 1;
 
 void setup()
 {
-  // leds
+  //Піни RGB світлодіоду
   pinMode(red_led, OUTPUT);
   pinMode(green_led, OUTPUT);
   pinMode(blue_led, OUTPUT);
-
+  
+  //Налаштування адресної світлодіодної стрічки
   FastLED.addLeds<WS2812, LED_PIN, GRB>(leds, LED_NUM);
   FastLED.setBrightness(50);
 
-  // buttons
+  //Кнопки
   pinMode(red_butt_pin, INPUT_PULLUP);
   pinMode(green_butt_pin, INPUT_PULLUP);
   pinMode(blue_butt_pin, INPUT_PULLUP);
@@ -119,12 +121,12 @@ void setup()
   Serial.begin(9600);
 #endif
 
-  setColor(colors[0]);
+  setColor(colors[0]);//Встановити колір першого режиму(білий)
 
-  randomSeed(analogRead(0));
+  randomSeed(analogRead(0)); //Задати випадкове значення для генератора випадкових чисел.(а не послідовних)
 }
 
-void get_butt_status()
+void get_butt_status() //Оновити буфер кнопок
 {
   buttons.R = !digitalRead(red_butt_pin);
   buttons.G = !digitalRead(green_butt_pin);
@@ -136,7 +138,7 @@ void get_butt_status()
   white_butt = digitalRead(white_butt_pin);
 }
 
-void win(int time = 3000, bool Buzzer = true)
+void win(int time = 3000, bool Buzzer = true) //Анімація перемоги
 {
   unsigned long start_time = millis();
   if (Buzzer)
@@ -156,7 +158,7 @@ void win(int time = 3000, bool Buzzer = true)
   }
 }
 
-void lose(int time = 3000, bool Buzzer = true)
+void lose(int time = 3000, bool Buzzer = true) //Анімація програшу
 {
   unsigned long start_time = millis();
   if (Buzzer)
@@ -175,46 +177,46 @@ void lose(int time = 3000, bool Buzzer = true)
   }
 }
 
-void loop()
+void loop()//Так зване меню
 {
-  white_butt = digitalRead(white_butt_pin);
-  if (white_butt != white_butt_old)
+  white_butt = digitalRead(white_butt_pin); //В меню використовується тільки одна кнопка а саме біла. Для чого тоді взнавати інші кнопки?
+  
+  //Обробка натискання білої кнопки
+  if (white_butt != white_butt_old) 
   {
     white_butt_old = white_butt;
     if (!white_butt && millis() - white_butt_last_time > 250)
     {
       white_butt_last_time = millis();
-      while (true)
+      while (true) //Цикл щоб перевірити чи точно користувач хоче вибрати саме цей режим в режим
       {
         if (digitalRead(white_butt_pin))
         {
-          break;
+          break; // Якщо кнопка була відпущена то ми вже не ждемо далі щоб розпочати режим
         }
-        else if (millis() - white_butt_last_time > 3000)
+        else if (millis() - white_butt_last_time > 3000) //Кнопка була натиснути більше 3 секунд тому запускаємо відповідний режим
         {
-          setColor(black);
-          start();
-          transition(led_color, black, 150);
-          break;
+          transition(led_color, black, 150);//миж не хочемо щоб колір на початку режиму був такий же самий як в меню.
+          start();//Запуск режиму
+          break;//Режим закінчився і потрібно вийти з циклу
         }
       }
-
-#ifdef DEBUG
+      #ifdef DEBUG
       Serial.println("White button pressed");
       Serial.println(index);
-#endif
-      if (index == 7)
+      #endif
+      if (index == 7)// Всього тільки 6 режимів. 
         index = 1;
       else
         index++;
 
-      transition(led_color, colors[index - 1], 150);
-      tone(buzzer, (100 * index) + 200, 110);
+      transition(led_color, colors[index - 1], 150);//Кожен режим має свій колір
+      tone(buzzer, (100 * index) + 200, 110); // І звук
     }
   }
 }
 
-void start()
+void start() //Запуск режиму
 {
   switch (index)
   {
@@ -239,7 +241,7 @@ void start()
   }
 }
 
-void learn()
+void learn()//Перший режим. Експерименти з кольорами. Залежно які кнопки нажаті ті кольори і горять
 {
   while (true)
   {
@@ -252,10 +254,7 @@ void learn()
 #endif
 
     get_butt_status();
-    if (red_butt != red_butt_old)
-    {
-      red_butt_old = red_butt;
-      if (!red_butt)
+    if (!red_butt)
       {
         setColor(255, led_color.G, led_color.B);
       }
@@ -263,11 +262,7 @@ void learn()
       {
         setColor(0, led_color.G, led_color.B);
       }
-    }
-
-    if (green_butt != green_butt_old)
-    {
-      green_butt_old = green_butt;
+    
       if (!green_butt)
       {
         setColor(led_color.R, 255, led_color.B);
@@ -276,12 +271,8 @@ void learn()
       {
         setColor(led_color.R, 0, led_color.B);
       }
-    }
 
-    if (blue_butt != blue_butt_old)
-    {
-      blue_butt_old = blue_butt;
-      if (!blue_butt)
+    if (!blue_butt)
       {
         setColor(led_color.R, led_color.G, 255);
       }
@@ -289,7 +280,7 @@ void learn()
       {
         setColor(led_color.R, led_color.G, 0);
       }
-    }
+    
     if (white_butt != white_butt_old)
     {
       white_butt_old = white_butt;
@@ -298,23 +289,28 @@ void learn()
         white_butt_last_time = millis();
       }
     }
-    if (millis() - white_butt_last_time > 5000 && !white_butt)
+    if (millis() - white_butt_last_time > 5000 && !white_butt)//Якщо кнопка зажата більше 5 секунд то виходимо з режиму
     {
-      break;
+      break;//Вихід з режиму
     }
   }
 }
 
-void sandbox()
+
+
+void sandbox()//Другий режим. Користувач можез адати в яких пропорціях змішуються кольори
 {
   Color user_color = black;
   while (true)
   {
+    #ifdef DEBUG
     Serial.print(user_color.R);
     Serial.print(", ");
     Serial.print(user_color.G);
     Serial.print(", ");
     Serial.println(user_color.B);
+    #endif
+
     get_butt_status();
     setColor(user_color);
     if (red_butt != red_butt_old)
@@ -523,7 +519,9 @@ void setColor(int R, int G, int B)
   Serial.println(buffer);
 #endif
 
-  FastLED.showColor(CRGB(R, G, B));
+  //FastLED.showColor(CRGB(R, G, B));
+  leds[10] = CRGB(R, G, B);
+  FastLED.show();
   analogWrite(red_led, map(R, 0, 255, 255, 0));
   analogWrite(green_led, map(G, 0, 255, 255, 0));
   analogWrite(blue_led, map(B, 0, 255, 255, 0));
