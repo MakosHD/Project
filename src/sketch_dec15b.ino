@@ -1,23 +1,22 @@
 #include <Arduino.h>//Бібліотека для коректної роботи Visual Studio Code з Arduino
 #include <FastLED.h>// Бібліотека для роботи з адресними світлодіодами
 
-#define DEBUG // Режим дебагу
-
+//#define DEBUG // Режим дебагу
 
 
 //Кнопки
 #define red_butt_pin 2
-#define blue_butt_pin 3
-#define green_butt_pin 4
+#define green_butt_pin 3
+#define blue_butt_pin 4
 #define white_butt_pin 5
 
 //Піни світлодіоду
-#define red_led 9
+#define red_led 11
 #define green_led 10
-#define blue_led 11
+#define blue_led 9
 
 //Зумер
-#define buzzer 8
+#define buzzer 6
 
 //Адресна світлодіодна стрічка
 #define LED_PIN 13
@@ -60,16 +59,16 @@ struct Buttons
 Buttons buttons;
 
 //Кольори
-Color white = {255, 255, 255};
-Color red = {255, 0, 0};
-Color green = {0, 255, 0};
-Color blue = {0, 0, 255};
-Color yellow = {255, 255, 0};
-Color cyan = {0, 255, 255};
-Color pink = {255, 0, 255};
-Color black = {0, 0, 0};
+Color const white = {255, 255, 255};
+Color const red = {255, 0, 0};
+Color const green = {0, 255, 0};
+Color const blue = {0, 0, 255};
+Color const yellow = {255, 255, 0};
+Color const cyan = {0, 255, 255};
+Color const pink = {255, 0, 255};
+Color const black = {0, 0, 0};
 
-Color colors[7] = {
+Color const  colors[7] = {
     white,
     red,
     green,
@@ -78,14 +77,14 @@ Color colors[7] = {
     cyan,
     pink};
 
-Color colors_rgb[3] = {
+Color const colors_rgb[3] = {
     red,
     green,
     blue};
 
 Color led_color = black;
 
-//Тимчасовий буфер кнопок
+//Тимчасовий буфер стану кнопок
 bool red_butt = true;
 bool green_butt = true;
 bool blue_butt = true;
@@ -99,7 +98,7 @@ bool white_butt_old = true;
 //Час останнього натискання білого кнопки
 unsigned long white_butt_last_time = 0;
 
-//Індекс режиму
+//Індекс вибраного режиму
 int index = 1;
 
 void setup()
@@ -170,9 +169,9 @@ void lose(int time = 3000, bool Buzzer = true) //Анімація програш
   unsigned long start_time = millis();
   if (Buzzer)
   {
-    tone(buzzer, 700, 200); // B5
+    tone(buzzer, 700, 200); 
     delay(260);
-    tone(buzzer, 400, 200); // G5
+    tone(buzzer, 400, 200); 
     delay(260);
     noTone(buzzer);
   }
@@ -303,8 +302,6 @@ void learn()//Перший режим. Експерименти з кольор�
   }
 }
 
-
-
 void sandbox()//Другий режим. Користувач можез адати в яких пропорціях змішуються кольори
 {
   Color user_color = black;
@@ -404,7 +401,7 @@ void first_game(bool multi_color_mode)
       }
       if (buttons == prev && buttons != (Buttons){false, false, false})
       {
-        if (millis() - start_time > 5000)
+        if (millis() - start_time > 3000)
         {
           lose(3000);
           break;
@@ -522,7 +519,7 @@ void second_game(bool multi_color_mode)
 void setColor(int R, int G, int B)
 {
 
-#ifdef DEBUGd
+#ifdef DEBUG
   char buffer[50];
   sprintf(buffer, "%d, %d, %d", R, G, B);
   Serial.print("Color is ");
@@ -551,7 +548,7 @@ void transition(Color start, Color end, int time)
   float R = start.R;
   float G = start.G;
   float B = start.B;
-
+  //визначення величини на яку колір повинний змінитися за одиницю часу.
   float R_step = (float)(end.R - start.R) / time;
   float G_step = (float)(end.G - start.G) / time;
   float B_step = (float)(end.B - start.B) / time;
@@ -569,7 +566,6 @@ void transition(Color start, Color end, int time)
 
     // Встановлення кольору
     setColor(R_int, G_int, B_int);
-    delay(1); // Очікування для плавного переходу
+    delay(1); // Очікування одиниці часу
   }
 }
-
