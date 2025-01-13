@@ -1,7 +1,9 @@
 #include <Arduino.h>//Бібліотека для коректної роботи Visual Studio Code з Arduino
 #include <FastLED.h>// Бібліотека для роботи з адресними світлодіодами
 
-//#define DEBUG // Режим дебагу
+#define DEBUG // Режим дебагу
+
+
 
 //Кнопки
 #define red_butt_pin 2
@@ -119,6 +121,11 @@ void setup()
 
 #ifdef DEBUG
   Serial.begin(9600);
+  #define debug_print(x) Serial.print(x)
+  #define debug_println(x) Serial.println(x);
+#else
+  #define debug_print(x)
+  #define debug_println(x)
 #endif
 
   setColor(colors[0]);//Встановити колір першого режиму(білий)
@@ -205,11 +212,11 @@ void loop()//Так зване меню
       Serial.println("White button pressed");
       Serial.println(index);
       #endif
-      if (index == 7)// Всього тільки 6 режимів. 
+      if (index == 6)// Всього тільки 6 режимів. 
         index = 1;
       else
         index++;
-
+      debug_print(index);
       transition(led_color, colors[index - 1], 150);//Кожен режим має свій колір
       tone(buzzer, (100 * index) + 200, 110); // І звук
     }
@@ -428,7 +435,7 @@ void second_game(bool multi_color_mode)
 {
   unsigned long start_time;
   setColor(black);
-  Serial.println("Second game started");
+  debug_println("Second game");
 
   Color pattern[100];
   int index = 0;
@@ -443,9 +450,8 @@ void second_game(bool multi_color_mode)
     {
       pattern[index] = colors_rgb[random(3)];
     }
-
-    Serial.print("Selected color for index: ");
-    Serial.println(index);
+    debug_print("color for i: ");
+    debug_println(index);
     transition(led_color, black, 100);
     transition(led_color, pattern[index], 150);
     delay(2000);
@@ -455,7 +461,9 @@ void second_game(bool multi_color_mode)
 
     for (int i = 0; i <= index;)
     {
-      Serial.println("Waiting for user input...");
+
+      debug_println("waiting");
+
       start_time = millis();
       bool correct_input = false;
 
@@ -471,7 +479,9 @@ void second_game(bool multi_color_mode)
 
         if (user_color == pattern[i])
         {
-          Serial.println("Correct!");
+
+          debug_println("right");
+
           tone(buzzer, 500, 200);
           delay(260);
           tone(buzzer, 800, 200);
@@ -495,33 +505,31 @@ void second_game(bool multi_color_mode)
       lose(3000);
       return;
     }
-    Serial.println("Pattern completed. Adding new color.");
+    debug_println("add new color");
     index++;
 
     if (millis() - white_butt_last_time > 5000 && !white_butt)
     {
-      Serial.println("White button timeout. Exiting game.");
+      debug_println("White button timeout. Exiting game.");
       return;
     }
   }
 
-  Serial.println("Game over!");
+  debug_println("Game over!");
   setColor(black); // Reset LEDs to black
 }
 
 void setColor(int R, int G, int B)
 {
 
-#ifdef DEBU
+#ifdef DEBUGd
   char buffer[50];
   sprintf(buffer, "%d, %d, %d", R, G, B);
   Serial.print("Color is ");
   Serial.println(buffer);
 #endif
 
-  //FastLED.showColor(CRGB(R, G, B));
-  leds[10] = CRGB(R, G, B);
-  FastLED.show();
+  FastLED.showColor(CRGB(R, G, B));
   analogWrite(red_led, map(R, 0, 255, 255, 0));
   analogWrite(green_led, map(G, 0, 255, 255, 0));
   analogWrite(blue_led, map(B, 0, 255, 255, 0));
