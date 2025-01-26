@@ -516,7 +516,7 @@ void second_game(bool multi_color_mode)
   setColor(black); // Reset LEDs to black
 }
 
-void setColor(int R, int G, int B)
+void setColor(int R, int G, int B) //встановити певний колір на світлодіоді
 {
 
 #ifdef DEBUG
@@ -540,7 +540,7 @@ void setColor(Color color)
   setColor(color.R, color.G, color.B);
 }
 
-void transition(Color start, Color end, int time)
+void transition(Color start, Color end, int time) // перехід від одного кольору до іншого за вказаний проміжок часу
 {
   if (time <= 0)
     return; // Захист від некоректного часу
